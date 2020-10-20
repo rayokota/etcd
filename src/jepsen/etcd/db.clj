@@ -203,12 +203,13 @@
         (info node "installing keta" version)
         (c/su
           (let [url (str "https://downloads.apache.org/kafka/2.6.0/" kafka-version ".tgz")]
-            ;(cu/install-archive! url "/opt")
-            (c/exec :wget url :-P "/tmp")
-            (c/exec :tar :-xf (str "/tmp/" kafka-version ".tgz" :-C "/opt"))
-            (c/exec :wget "https://www-us.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz" :-P "/tmp")
-            (c/exec :tar :-xf "/tmp/apache-maven-*.tar.gz" :-C "/opt")
             (c/exec :apt-get :install :-y "git")
+            ;(cu/install-archive! url "/opt")
+            (c/exec :rm :-rf (c/lit "/tmp/*"))
+            (c/exec :wget url :-P "/tmp")
+            (c/exec :tar :-xf (str "/tmp/" kafka-version ".tgz") :-C "/opt")
+            (c/exec :wget "https://mirrors.sonic.net/apache/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz" :-P "/tmp")
+            (c/exec :tar :-xf "/tmp/apache-maven-3.6.3-bin.tar.gz" :-C "/opt")
             (c/cd "/opt"
                   (when-not (cu/exists? "keta")
                     (c/exec :git :clone "https://github.com/rayokota/keta.git")))
@@ -231,7 +232,7 @@
     (teardown! [db test node]
       (info node "tearing down keta")
       (db/kill! db test node)
-      (c/su (c/exec :rm :-rf "/tmp/*")))
+      (c/su (c/exec :rm :-rf (c/lit "/tmp/*"))))
 
     db/LogFiles
     (log-files [_ test node]
