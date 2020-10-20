@@ -75,22 +75,22 @@
        :pidfile zk-pidfile
        :chdir   kafka-dir}
 
-      (str dir "bin/zookeeper-server-start.sh")
-      (str dir "config/zookeeper.properties"))
+      "bin/zookeeper-server-start.sh"
+      "config/zookeeper.properties"
     (cu/start-daemon!
       {:logfile kafka-logfile
        :pidfile kafka-pidfile
        :chdir   kafka-dir}
 
-      (str dir "bin/kafka-server-start.sh")
-      (str dir "config/server.properties"))
+      "bin/kafka-server-start.sh"
+      "config/server.properties")
     (cu/start-daemon!
       {:logfile logfile
        :pidfile pidfile
        :chdir   dir}
 
-      (str dir "bin/keta-start")
-      (str dir "config/keta.properties"))))
+      "bin/keta-start"
+      "config/keta.properties")))
 
 (defn members
   "Takes a test, asks all nodes for their membership, and returns the highest
@@ -228,7 +228,7 @@
                   (when-not (cu/exists? "keta")
                     (c/exec :git :clone "https://github.com/rayokota/keta.git")))
             (c/cd dir
-                  (c/exec "/opt/apache-maven-3.6.3/bin/mvn" :clean :package :-DskipTests))
+                  (c/exec "/opt/apache-maven-3.6.3/bin/mvn" :package :-DskipTests))
             )))
       (db/start! db test node)
 
