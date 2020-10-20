@@ -15,13 +15,16 @@
             [slingshot.slingshot :refer [throw+ try+]]))
 
 (def dir "/opt/keta")
-(def logfile (str dir "/logs/keta.log"))
+;(def logfile (str dir "/logs/keta.log"))
+(def logfile "/tmp/keta.log")
 (def pidfile (str dir "/keta.pid"))
 (def kafka-version "kafka_2.13-2.6.0")
 (def kafka-dir (str "/opt/" kafka-version))
-(def kafka-logfile (str kafka-dir "/logs/server.log"))
+;(def kafka-logfile (str kafka-dir "/logs/server.log"))
+(def kafka-logfile "/tmp/server.log")
 (def kafka-pidfile "/tmp/kafka.pid")
 (def maven-version "apache-maven-3.6.3")
+(def zk-logfile "/tmp/zk.log")
 (def zk-pidfile "/tmp/zk.pid")
 
 (defn wipe!
@@ -72,26 +75,26 @@
   [node opts]
   (c/su
     (cu/start-daemon!
-      {:logfile kafka-logfile
+      {:logfile zk-logfile
        :pidfile zk-pidfile
        :chdir   kafka-dir}
 
-      "bin/zookeeper-server-start.sh"
-      "config/zookeeper.properties")
+      (str kafka-dir "/bin/zookeeper-server-start.sh")
+      (str kafka-dir "/config/zookeeper.properties"))
     (cu/start-daemon!
       {:logfile kafka-logfile
        :pidfile kafka-pidfile
        :chdir   kafka-dir}
 
-      "bin/kafka-server-start.sh"
-      "config/server.properties")
+      (str kafka-dir "bin/kafka-server-start.sh")
+      (str kafka-dir "config/server.properties"))
     (cu/start-daemon!
       {:logfile logfile
        :pidfile pidfile
        :chdir   dir}
 
-      "bin/keta-start"
-      "config/keta.properties")))
+      (str dir "/bin/keta-start")
+      (str dir "/config/keta.properties"))))
 
 (defn members
   "Takes a test, asks all nodes for their membership, and returns the highest
