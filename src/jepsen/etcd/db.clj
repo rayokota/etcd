@@ -189,6 +189,7 @@
     (c/exec :add-apt-repository :-y "https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/")
     (c/exec :apt-get :update)
     (c/exec :apt-get :install :-y "adoptopenjdk-8-hotspot")
+    (c/exec :update-alternatives :--set :java "/usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/bin/java")
     ))
 
 (defn db
