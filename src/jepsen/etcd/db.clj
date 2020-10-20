@@ -76,7 +76,7 @@
        :chdir   kafka-dir}
 
       "bin/zookeeper-server-start.sh"
-      "config/zookeeper.properties"
+      "config/zookeeper.properties")
     (cu/start-daemon!
       {:logfile kafka-logfile
        :pidfile kafka-pidfile
