@@ -178,12 +178,14 @@
   "Installs open jdk8"
   []
   (c/su
-    (debian/add-repo!
-      "backports"
-      "deb http://http.debian.net/debian jessie-backports main")
     (c/exec :apt-get :update)
-    (c/exec :apt-get :install :-y :-t :jessie-backports "openjdk-8-jdk")
-    (c/exec :update-java-alternatives :--set "java-1.8.0-openjdk-amd64")
+    (c/exec :apt-get :install :-y "apt-transport-https" "ca-certificates" "wget" "dirmngr" "gnupg" "software-properties-common")
+    (c/exec :wget "https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public" :-P "/tmp")
+    (c/exec :apt-key :add "/tmp/public")
+    (c/exec :add-apt-repository :-y "https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/")
+    (c/exec :apt-get :update)
+    (c/exec :apt-get :install :-y "adoptopenjdk-8-hotspot")
+    ;(c/exec :update-java-alternatives :--set "java-1.8.0-openjdk-amd64")
     ))
 
 (defn db
