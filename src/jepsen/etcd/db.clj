@@ -17,7 +17,8 @@
 (def dir "/opt/keta")
 (def logfile (str dir "/logs/keta.log"))
 (def pidfile (str dir "/keta.pid"))
-(def kafka-dir "/opt/kafka")
+(def kafka-version "kafka_2.13-2.6.0")
+(def kafka-dir (str "/opt/" kafka-version))
 (def kafka-logfile (str kafka-dir "/logs/server.log"))
 (def kafka-pidfile "/tmp/kafka.pid")
 (def zk-pidfile "/tmp/zk.pid")
@@ -201,13 +202,18 @@
       (let [version (:version test)]
         (info node "installing keta" version)
         (c/su
-          (let [url "https://downloads.apache.org/kafka/2.6.0/kafka_2.13-2.6.0.tgz"]
-            (cu/install-archive! url kafka-dir)
+          (let [url (str "https://downloads.apache.org/kafka/2.6.0/" kafka-version ".tgz")]
+            ;(cu/install-archive! url "/opt")
+            (c/exec :wget url :-P "/tmp")
+            (c/exec :tar :-xf (str "/tmp/" kafka-version ".tgz" :-C "/opt"))
+            (c/exec :wget "https://www-us.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz" :-P "/tmp")
+            (c/exec :tar :-xf "/tmp/apache-maven-*.tar.gz" :-C "/opt")
+            (c/exec :apt-get :install :-y "git")
             (c/cd "/opt"
-                  (when-not (cu/file? "keta")
+                  (when-not (cu/exists? "keta")
                     (c/exec :git :clone "https://github.com/rayokota/keta.git")))
             (c/cd dir
-                  (c/exec :mvn :clean :package))
+                  (c/exec "/opt/apache-maven-3.6.3/bin/mvn" :clean :package))
             )))
       (db/start! db test node)
 
