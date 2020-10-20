@@ -1,6 +1,7 @@
 (ns jepsen.etcd.db
   "Database setup and automation"
   (:require [clojure.tools.logging :refer [info warn]]
+            [clojure.java.io :as io]
             [clojure.string :as str]
             [dom-top.core :refer [real-pmap]]
             [jepsen [control :as c]
@@ -192,6 +193,19 @@
     (c/exec :update-alternatives :--set :java "/usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/bin/java")
     ))
 
+(defn zk-node-ids
+  "Returns a map of node names to node ids."
+  [test]
+  (->> test
+       :nodes
+       (map-indexed (fn [i node] [node i]))
+       (into {})))
+
+(defn zk-node-id
+  "Given a test and a node name from that test, returns the ID for that node."
+  [test node]
+  ((zk-node-ids test) node))
+
 (defn db
   "Etcd DB. Pulls version from test map's :version"
   []
@@ -219,7 +233,7 @@
     (setup! [db test node]
       (let [version (:version test)]
         (install-open-jdk8!)
-        (info node "installing keta" version)
+        (info node "installing keta")
         (c/su
           (let [url (str "https://downloads.apache.org/kafka/2.6.0/" kafka-version ".tgz")]
             ;(cu/install-archive! url "/opt")
@@ -227,7 +241,19 @@
             (c/cd "/opt"
                   (when-not (cu/exists? kafka-version)
                     (c/exec :wget url :-P "/tmp")
-                    (c/exec :tar :-xf (str "/tmp/" kafka-version ".tgz") :-C "/opt")))
+                    (c/exec :tar :-xf (str "/tmp/" kafka-version ".tgz") :-C "/opt")
+                    (c/exec :echo
+                            (-> "zookeeper.properties"
+                                io/resource
+                                slurp)
+                            :> (str kafka-dir "/config/zookeeper.properties"))
+                    (c/exec :echo
+                            (-> "server.properties"
+                                io/resource
+                                slurp)
+                            :> (str kafka-dir "/config/server.properties"))
+                    (c/exec :echo (zk-node-id test node) :> "/tmp/zookeeper/myid")))
+
             (c/cd "/opt"
                   (when-not (cu/exists? maven-version)
                     (c/exec :wget (str "https://mirrors.sonic.net/apache/maven/maven-3/3.6.3/binaries/" maven-version "-bin.tar.gz") :-P "/tmp")
@@ -235,7 +261,13 @@
             (c/cd "/opt"
                   (when-not (cu/exists? "keta")
                     (c/exec :apt-get :install :-y "git")
-                    (c/exec :git :clone "https://github.com/rayokota/keta.git")))
+                    (c/exec :git :clone "https://github.com/rayokota/keta.git")
+                    (c/exec :echo
+                            (-> "keta.properties"
+                                io/resource
+                                slurp
+                                (str/replace "$NODE_NAME" (name node))
+                                :> (str dir "/config/keta.properties"))))
             (c/cd dir
                   (c/exec "/opt/apache-maven-3.6.3/bin/mvn" :package :-DskipTests))
             )))
