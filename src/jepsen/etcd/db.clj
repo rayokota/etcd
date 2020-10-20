@@ -86,8 +86,8 @@
        :pidfile kafka-pidfile
        :chdir   kafka-dir}
 
-      (str kafka-dir "bin/kafka-server-start.sh")
-      (str kafka-dir "config/server.properties"))
+      (str kafka-dir "/bin/kafka-server-start.sh")
+      (str kafka-dir "/config/server.properties"))
     (cu/start-daemon!
       {:logfile logfile
        :pidfile pidfile
