@@ -185,7 +185,6 @@
     (c/exec :add-apt-repository :-y "https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/")
     (c/exec :apt-get :update)
     (c/exec :apt-get :install :-y "adoptopenjdk-8-hotspot")
-    ;(c/exec :update-java-alternatives :--set "java-1.8.0-openjdk-amd64")
     ))
 
 (defn db
@@ -214,8 +213,8 @@
     db/DB
     (setup! [db test node]
       (let [version (:version test)]
-        (info node "installing keta" version)
         (install-open-jdk8!)
+        (info node "installing keta" version)
         (c/su
           (let [url (str "https://downloads.apache.org/kafka/2.6.0/" kafka-version ".tgz")]
             (c/exec :apt-get :install :-y "git")
@@ -229,7 +228,7 @@
                   (when-not (cu/exists? "keta")
                     (c/exec :git :clone "https://github.com/rayokota/keta.git")))
             (c/cd dir
-                  (c/exec "/opt/apache-maven-3.6.3/bin/mvn" :clean :package))
+                  (c/exec "/opt/apache-maven-3.6.3/bin/mvn" :clean :package :-DskipTests))
             )))
       (db/start! db test node)
 
