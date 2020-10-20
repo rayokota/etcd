@@ -14,10 +14,13 @@
                          [support :as s]]
             [slingshot.slingshot :refer [throw+ try+]]))
 
-(def dir "/opt/etcd")
-(def binary "etcd")
-(def logfile (str dir "/etcd.log"))
-(def pidfile (str dir "/etcd.pid"))
+(def dir "/opt/keta")
+(def logfile (str dir "/logs/keta.log"))
+(def pidfile (str dir "/keta.pid"))
+(def kafka-dir "/opt/kafka")
+(def kafka-logfile (str kafka-dir "/logs/server.log"))
+(def kafka-pidfile "/tmp/kafka.pid")
+(def zk-pidfile "/tmp/zk.pid")
 
 (defn wipe!
   "Wipes data files on the current node."
@@ -60,28 +63,33 @@
        (str/join ",")))
 
 (defn start!
-  "Starts etcd on the given node. Options:
+  "Starts keta on the given node. Options:
 
     :initial-cluster-state    Either :new or :existing
     :nodes                    A set of nodes that will comprise the cluster."
   [node opts]
   (c/su
     (cu/start-daemon!
+      {:logfile kafka-logfile
+       :pidfile zk-pidfile
+       :chdir   kafka-dir}
+
+      (str dir "bin/zookeeper-server-start.sh")
+      (str dir "config/zookeeper.properties"))
+    (cu/start-daemon!
+      {:logfile kafka-logfile
+       :pidfile kafka-pidfile
+       :chdir   kafka-dir}
+
+      (str dir "bin/kafka-server-start.sh")
+      (str dir "config/server.properties"))
+    (cu/start-daemon!
       {:logfile logfile
        :pidfile pidfile
        :chdir   dir}
-      binary
-      :--enable-v2
-      :--log-outputs                  :stderr
-      :--logger                       :zap
-      :--name                         node
-      :--listen-peer-urls             (s/peer-url   node)
-      :--listen-client-urls           (s/client-url node)
-      :--advertise-client-urls        (s/client-url node)
-      :--initial-cluster-state        (:initial-cluster-state opts
-                                                              :existing)
-      :--initial-advertise-peer-urls  (s/peer-url node)
-      :--initial-cluster              (initial-cluster (:nodes opts)))))
+
+      (str dir "bin/keta-start")
+      (str dir "config/keta.properties"))))
 
 (defn members
   "Takes a test, asks all nodes for their membership, and returns the highest
@@ -171,40 +179,36 @@
   (reify
     db/Process
     (start! [_ test node]
-      (start! node
-              {:initial-cluster-state (if @(:initialized? test)
-                                        :existing
-                                        :new)
-               :nodes                 @(:members test)}))
+      (start! node {}))
 
     (kill! [_ test node]
       (c/su
-        (cu/stop-daemon! binary pidfile)))
+        (cu/stop-daemon! "KetaMain" pidfile)
+        (cu/stop-daemon! kafka-pidfile)
+        (cu/stop-daemon! zk-pidfile)))
 
     db/Pause
-    (pause!  [_ test node] (c/su (cu/grepkill! :stop "etcd")))
-    (resume! [_ test node] (c/su (cu/grepkill! :cont "etcd")))
+    (pause!  [_ test node])
+    (resume! [_ test node])
 
     db/Primary
     (setup-primary! [_ test node])
 
-    (primaries [_ test]
-      (try+
-        (list (primary test))
-        (catch [:type :no-node-responded] e
-          [])
-        (catch [:type :jepsen.etcd.client/no-such-node] e
-          (warn e "Weird cluster state: unknown node ID, can't figure out what primary is right now")
-          [])))
+    (primaries [_ test])
 
     db/DB
     (setup! [db test node]
       (let [version (:version test)]
-        (info node "installing etcd" version)
+        (info node "installing keta" version)
         (c/su
-          (let [url (str "https://storage.googleapis.com/etcd/v" version
-                         "/etcd-v" version "-linux-amd64.tar.gz")]
-            (cu/install-archive! url dir))))
+          (let [url "https://downloads.apache.org/kafka/2.6.0/kafka_2.13-2.6.0.tgz"]
+            (cu/install-archive! url kafka-dir)
+            (c/cd "/opt"
+                  (when-not (cu/file? "keta")
+                    (c/exec :git :clone "https://github.com/rayokota/keta.git")))
+            (c/cd dir
+                  (c/exec :mvn :clean :package))
+            )))
       (db/start! db test node)
 
       ; Wait for node to come up
@@ -219,14 +223,10 @@
       (reset! (:initialized? test) true))
 
     (teardown! [db test node]
-      (info node "tearing down etcd")
+      (info node "tearing down keta")
       (db/kill! db test node)
-      (c/su (c/exec :rm :-rf dir)))
+      (c/su (c/exec :rm :-rf "/tmp/*")))
 
     db/LogFiles
     (log-files [_ test node]
-      ; hack hack hack
-      (meh (c/su (c/cd dir
-                       (c/exec :tar :cjf "data.tar.bz2" (str node ".etcd")))))
-      [logfile
-       (str dir "/data.tar.bz2")])))
+      [logfile])))

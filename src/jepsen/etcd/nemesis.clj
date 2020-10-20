@@ -59,6 +59,6 @@
   [opts]
   (let [opts (update opts :faults set)]
     (-> (nc/nemesis-packages opts)
-        (concat [(member-package opts)])
+        ;(concat [(member-package opts)])
         (->> (remove nil?))
         nc/compose-packages)))
