@@ -267,7 +267,7 @@
                                 io/resource
                                 slurp
                                 (str/replace "$NODE_NAME" (name node))
-                                :> (str dir "/config/keta.properties"))))
+                                :> (str dir "/config/keta.properties")))))
             (c/cd dir
                   (c/exec "/opt/apache-maven-3.6.3/bin/mvn" :package :-DskipTests))
             )))
