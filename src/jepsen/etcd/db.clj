@@ -206,6 +206,14 @@
   [test node]
   ((zk-node-ids test) node))
 
+(defn zoo-cfg-servers
+  "Constructs a zoo.cfg fragment for servers."
+  [test node]
+  (->> (zk-node-ids test)
+       (map (fn [[n id]]
+              (str "server." id "=" (if (= n node) "0.0.0.0" (name n)) ":2888:3888")))
+       (str/join "\n")))
+
 (defn db
   "Etcd DB. Pulls version from test map's :version"
   []
@@ -242,16 +250,16 @@
                   (when-not (cu/exists? kafka-version)
                     (c/exec :wget url :-P "/tmp")
                     (c/exec :tar :-xf (str "/tmp/" kafka-version ".tgz") :-C "/opt")
-                    (c/exec :echo
-                            (-> "zookeeper.properties"
-                                io/resource
-                                slurp)
+                    (c/exec :echo (str (slurp (io/resource "zookeeper.properties"))
+                                       "\n"
+                                       (zoo-cfg-servers test node))
                             :> (str kafka-dir "/config/zookeeper.properties"))
                     (c/exec :echo
                             (-> "server.properties"
                                 io/resource
                                 slurp)
                             :> (str kafka-dir "/config/server.properties"))
+                    (c/exec :mkdir "/tmp/zookeeper")
                     (c/exec :echo (zk-node-id test node) :> "/tmp/zookeeper/myid")))
 
             (c/cd "/opt"
@@ -266,8 +274,8 @@
                             (-> "keta.properties"
                                 io/resource
                                 slurp
-                                (str/replace "$NODE_NAME" (name node))
-                                :> (str dir "/config/keta.properties")))))
+                                (str/replace "$NODE_NAME" (name node)))
+                            :> (str dir "/config/keta.properties"))))
             (c/cd dir
                   (c/exec "/opt/apache-maven-3.6.3/bin/mvn" :package :-DskipTests))
             )))
