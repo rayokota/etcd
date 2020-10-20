@@ -21,6 +21,7 @@
 (def kafka-dir (str "/opt/" kafka-version))
 (def kafka-logfile (str kafka-dir "/logs/server.log"))
 (def kafka-pidfile "/tmp/kafka.pid")
+(def maven-version "apache-maven-3.6.3")
 (def zk-pidfile "/tmp/zk.pid")
 
 (defn wipe!
@@ -217,15 +218,19 @@
         (info node "installing keta" version)
         (c/su
           (let [url (str "https://downloads.apache.org/kafka/2.6.0/" kafka-version ".tgz")]
-            (c/exec :apt-get :install :-y "git")
             ;(cu/install-archive! url "/opt")
             (c/exec :rm :-rf (c/lit "/tmp/*"))
-            (c/exec :wget url :-P "/tmp")
-            (c/exec :tar :-xf (str "/tmp/" kafka-version ".tgz") :-C "/opt")
-            (c/exec :wget "https://mirrors.sonic.net/apache/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz" :-P "/tmp")
-            (c/exec :tar :-xf "/tmp/apache-maven-3.6.3-bin.tar.gz" :-C "/opt")
+            (c/cd "/opt"
+                  (when-not (cu/exists? kafka-version)
+                    (c/exec :wget url :-P "/tmp")
+                    (c/exec :tar :-xf (str "/tmp/" kafka-version ".tgz") :-C "/opt")))
+            (c/cd "/opt"
+                  (when-not (cu/exists? maven-version)
+                    (c/exec :wget (str "https://mirrors.sonic.net/apache/maven/maven-3/3.6.3/binaries/" maven-version "-bin.tar.gz") :-P "/tmp")
+                    (c/exec :tar :-xf (str "/tmp/" maven-version "-bin.tar.gz") :-C "/opt")))
             (c/cd "/opt"
                   (when-not (cu/exists? "keta")
+                    (c/exec :apt-get :install :-y "git")
                     (c/exec :git :clone "https://github.com/rayokota/keta.git")))
             (c/cd dir
                   (c/exec "/opt/apache-maven-3.6.3/bin/mvn" :package :-DskipTests))
