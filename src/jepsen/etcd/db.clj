@@ -174,6 +174,18 @@
       (swap! (:members test) disj node)
       node)))
 
+(defn install-open-jdk8!
+  "Installs open jdk8"
+  []
+  (c/su
+    (debian/add-repo!
+      "backports"
+      "deb http://http.debian.net/debian jessie-backports main")
+    (c/exec :apt-get :update)
+    (c/exec :apt-get :install :-y :-t :jessie-backports "openjdk-8-jdk")
+    (c/exec :update-java-alternatives :--set "java-1.8.0-openjdk-amd64")
+    ))
+
 (defn db
   "Etcd DB. Pulls version from test map's :version"
   []
@@ -201,6 +213,7 @@
     (setup! [db test node]
       (let [version (:version test)]
         (info node "installing keta" version)
+        (install-open-jdk8!)
         (c/su
           (let [url (str "https://downloads.apache.org/kafka/2.6.0/" kafka-version ".tgz")]
             (c/exec :apt-get :install :-y "git")
