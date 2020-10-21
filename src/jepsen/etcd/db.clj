@@ -82,7 +82,7 @@
 
       (str kafka-dir "/bin/zookeeper-server-start.sh")
       (str kafka-dir "/config/zookeeper.properties"))
-    (Thread/sleep 5000)
+    (Thread/sleep 10000)
     (cu/start-daemon!
       {:logfile kafka-logfile
        :pidfile kafka-pidfile
@@ -90,7 +90,7 @@
 
       (str kafka-dir "/bin/kafka-server-start.sh")
       (str kafka-dir "/config/server.properties"))
-    (Thread/sleep 5000)
+    (Thread/sleep 10000)
     (cu/start-daemon!
       {:logfile logfile
        :pidfile pidfile
