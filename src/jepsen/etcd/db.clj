@@ -261,7 +261,8 @@
                     (c/exec :echo
                             (-> "server.properties"
                                 io/resource
-                                slurp)
+                                slurp
+                                (str/replace "$NODE_NAME" (name node)))
                             :> (str kafka-dir "/config/server.properties"))))
 
             (c/cd "/opt"
