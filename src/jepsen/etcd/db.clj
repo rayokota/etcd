@@ -82,6 +82,7 @@
 
       (str kafka-dir "/bin/zookeeper-server-start.sh")
       (str kafka-dir "/config/zookeeper.properties"))
+    (Thread/sleep 5000)
     (cu/start-daemon!
       {:logfile kafka-logfile
        :pidfile kafka-pidfile
@@ -89,6 +90,7 @@
 
       (str kafka-dir "/bin/kafka-server-start.sh")
       (str kafka-dir "/config/server.properties"))
+    (Thread/sleep 5000)
     (cu/start-daemon!
       {:logfile logfile
        :pidfile pidfile
@@ -248,11 +250,6 @@
             (c/exec :rm :-rf (c/lit "/tmp/*"))
             (c/exec :mkdir "/tmp/zookeeper")
             (c/exec :echo (zk-node-id test node) :> "/tmp/zookeeper/myid")
-            (c/exec :echo
-                    (-> "cub.py"
-                        io/resource
-                        slurp)
-                    :> "/usr/local/bin/cub.py")
             (c/cd "/opt"
                   (when-not (cu/exists? kafka-version)
                     (c/exec :wget url :-P "/tmp")
