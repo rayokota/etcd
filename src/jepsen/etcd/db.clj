@@ -250,20 +250,26 @@
             (c/exec :rm :-rf (c/lit "/tmp/*"))
             (c/exec :mkdir "/tmp/zookeeper")
             (c/exec :echo (zk-node-id test node) :> "/tmp/zookeeper/myid")
+            (c/exec :echo (str (slurp (io/resource "zookeeper.properties"))
+                               "\n"
+                               (zoo-cfg-servers test node))
+                    :> (str kafka-dir "/config/zookeeper.properties"))
+            (c/exec :echo
+                    (-> "keta.properties"
+                        io/resource
+                        slurp
+                        (str/replace "$NODE_NAME" (name node)))
+                    :> (str dir "/config/keta.properties"))
+            (c/exec :echo
+                    (-> "server.properties"
+                        io/resource
+                        slurp
+                        (str/replace "$NODE_NAME" (name node)))
+                    :> (str kafka-dir "/config/server.properties"))
             (c/cd "/opt"
                   (when-not (cu/exists? kafka-version)
                     (c/exec :wget url :-P "/tmp")
-                    (c/exec :tar :-xf (str "/tmp/" kafka-version ".tgz") :-C "/opt")
-                    (c/exec :echo (str (slurp (io/resource "zookeeper.properties"))
-                                       "\n"
-                                       (zoo-cfg-servers test node))
-                            :> (str kafka-dir "/config/zookeeper.properties"))
-                    (c/exec :echo
-                            (-> "server.properties"
-                                io/resource
-                                slurp
-                                (str/replace "$NODE_NAME" (name node)))
-                            :> (str kafka-dir "/config/server.properties"))))
+                    (c/exec :tar :-xf (str "/tmp/" kafka-version ".tgz") :-C "/opt")))
 
             (c/cd "/opt"
                   (when-not (cu/exists? maven-version)
@@ -272,14 +278,9 @@
             (c/cd "/opt"
                   (when-not (cu/exists? "keta")
                     (c/exec :apt-get :install :-y "git")
-                    (c/exec :git :clone "https://github.com/rayokota/keta.git")
-                    (c/exec :echo
-                            (-> "keta.properties"
-                                io/resource
-                                slurp
-                                (str/replace "$NODE_NAME" (name node)))
-                            :> (str dir "/config/keta.properties"))))
+                    (c/exec :git :clone "https://github.com/rayokota/keta.git")))
             (c/cd dir
+                  (c/exec :git :pull)
                   (c/exec "/opt/apache-maven-3.6.3/bin/mvn" :package :-DskipTests))
             )))
       (db/start! db test node)
