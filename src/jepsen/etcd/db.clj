@@ -211,7 +211,7 @@
   [test node]
   (->> (zk-node-ids test)
        (map (fn [[n id]]
-              (str "server." id "=" (if (= n node) "0.0.0.0" (c.net/ip n)) ":2888:3888")))
+              (str "server." id "=" (if (= n node) "0.0.0.0" (name n)) ":2888:3888")))
        (str/join "\n")))
 
 (defn db
