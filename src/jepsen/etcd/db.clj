@@ -211,7 +211,7 @@
   [test node]
   (->> (zk-node-ids test)
        (map (fn [[n id]]
-              (str "server." id "=" (if (= n node) "0.0.0.0" (name n)) ":2888:3888")))
+              (str "server." id "=" (if (= n node) "0.0.0.0" (c.net/ip n)) ":2888:3888")))
        (str/join "\n")))
 
 (defn db
@@ -246,6 +246,13 @@
           (let [url (str "https://downloads.apache.org/kafka/2.6.0/" kafka-version ".tgz")]
             ;(cu/install-archive! url "/opt")
             (c/exec :rm :-rf (c/lit "/tmp/*"))
+            (c/exec :mkdir "/tmp/zookeeper")
+            (c/exec :echo (zk-node-id test node) :> "/tmp/zookeeper/myid")
+            (c/exec :echo
+                    (-> "cub.py"
+                        io/resource
+                        slurp)
+                    :> "/usr/local/bin/cub.py")
             (c/cd "/opt"
                   (when-not (cu/exists? kafka-version)
                     (c/exec :wget url :-P "/tmp")
@@ -258,9 +265,7 @@
                             (-> "server.properties"
                                 io/resource
                                 slurp)
-                            :> (str kafka-dir "/config/server.properties"))
-                    (c/exec :mkdir "/tmp/zookeeper")
-                    (c/exec :echo (zk-node-id test node) :> "/tmp/zookeeper/myid")))
+                            :> (str kafka-dir "/config/server.properties"))))
 
             (c/cd "/opt"
                   (when-not (cu/exists? maven-version)
