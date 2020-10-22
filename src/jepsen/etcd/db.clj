@@ -101,6 +101,7 @@
       (c/su
         (cu/stop-daemon! "KetaMain" pidfile)
         (c/su (c/exec :rm :-rf "/tmp/keta/_keta/.lock"))
+        (c/su (c/exec :rm :-rf "/tmp/keta/rocksdb/_keta/LOCK"))
         (cu/stop-daemon! kafka-pidfile)
         (cu/stop-daemon! zk-pidfile)))
 
