@@ -176,4 +176,4 @@
 
     db/LogFiles
     (log-files [_ test node]
-      [logfile])))
+      [logfile kafka-logfile zk-logfile])))
