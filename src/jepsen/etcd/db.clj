@@ -178,8 +178,8 @@
       (db/kill! db test node)
       (c/su
         (cu/stop-daemon! kafka-pidfile)
-        (cu/stop-daemon! zk-pidfile)))
-        (c/exec :rm :-rf (c/lit "/tmp/*"))
+        (cu/stop-daemon! zk-pidfile)
+        (c/exec :rm :-rf (c/lit "/tmp/*"))))
 
     db/LogFiles
     (log-files [_ test node]
