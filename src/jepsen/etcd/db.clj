@@ -141,12 +141,6 @@
                                (zoo-cfg-servers test node))
                     :> (str kafka-dir "/config/zookeeper.properties"))
             (c/exec :echo
-                    (-> "keta.properties"
-                        io/resource
-                        slurp
-                        (str/replace "$NODE_NAME" (name node)))
-                    :> (str dir "/config/keta.properties"))
-            (c/exec :echo
                     (-> "server.properties"
                         io/resource
                         slurp
@@ -156,6 +150,13 @@
                   (when-not (cu/exists? "keta")
                     (c/exec :apt-get :install :-y "git")
                     (c/exec :git :clone "https://github.com/rayokota/keta.git")))
+            (c/exec :echo
+                    (-> "keta.properties"
+                        io/resource
+                        slurp
+                        (str/replace "$NODE_NAME" (name node)))
+                    :> (str dir "/config/keta.properties"))
+            (info node "building Keta")
             (c/cd dir
                   (c/exec :git :pull)
                   (c/exec "/opt/apache-maven-3.6.3/bin/mvn" :package :-DskipTests))
