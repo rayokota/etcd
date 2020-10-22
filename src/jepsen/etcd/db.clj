@@ -34,6 +34,17 @@
   [node opts]
   (c/su
     (cu/start-daemon!
+      {:logfile logfile
+       :pidfile pidfile
+       :chdir   dir}
+      (str dir "/bin/keta-start")
+      (str dir "/config/keta.properties"))))
+
+(defn start-kafka!
+  "Starts Kafka on the given node"
+  []
+  (c/su
+    (cu/start-daemon!
       {:logfile zk-logfile
        :pidfile zk-pidfile
        :chdir   kafka-dir}
@@ -46,13 +57,7 @@
        :chdir   kafka-dir}
       (str kafka-dir "/bin/kafka-server-start.sh")
       (str kafka-dir "/config/server.properties"))
-    (Thread/sleep 5000)
-    (cu/start-daemon!
-      {:logfile logfile
-       :pidfile pidfile
-       :chdir   dir}
-      (str dir "/bin/keta-start")
-      (str dir "/config/keta.properties"))))
+    (Thread/sleep 5000)))
 
 (defn install-open-jdk8!
   "Installs open jdk8"
@@ -99,9 +104,7 @@
 
     (kill! [_ test node]
       (c/su
-        (cu/stop-daemon! "KetaMain" pidfile)
-        (cu/stop-daemon! kafka-pidfile)
-        (cu/stop-daemon! zk-pidfile)))
+        (cu/stop-daemon! "KetaMain" pidfile)))
 
     db/Pause
     (pause!  [_ test node])
@@ -156,6 +159,7 @@
                   (c/exec :git :pull)
                   (c/exec "/opt/apache-maven-3.6.3/bin/mvn" :package :-DskipTests))
             )))
+      (start-kafka!)
       (db/start! db test node)
 
       ; Wait for node to come up
@@ -172,7 +176,10 @@
     (teardown! [db test node]
       (info node "tearing down Keta")
       (db/kill! db test node)
-      (c/su (c/exec :rm :-rf (c/lit "/tmp/*"))))
+      (c/su
+        (cu/stop-daemon! kafka-pidfile)
+        (cu/stop-daemon! zk-pidfile)))
+        (c/exec :rm :-rf (c/lit "/tmp/*"))
 
     db/LogFiles
     (log-files [_ test node]
