@@ -16,15 +16,15 @@
             [slingshot.slingshot :refer [throw+ try+]]))
 
 (def dir "/opt/keta")
-(def logfile (str dir "/keta.log"))
-(def pidfile (str dir "/keta.pid"))
+(def logfile "/tmp/keta.log")
+(def pidfile "/tmp/keta.pid")
 (def kafka-version "kafka_2.13-2.6.0")
 (def kafka-dir (str "/opt/" kafka-version))
-(def kafka-logfile (str kafka-dir "/kafka.log"))
-(def kafka-pidfile (str kafka-dir "/kafka.pid"))
+(def kafka-logfile "/tmp/kafka.log")
+(def kafka-pidfile "/tmp/kafka.pid")
 (def maven-version "apache-maven-3.6.3")
-(def zk-logfile (str kafka-dir "/zk.log"))
-(def zk-pidfile (str kafka-dir "/zk.pid"))
+(def zk-logfile "/tmp/zk.log")
+(def zk-pidfile "/tmp/zk.pid")
 
 (defn start!
   "Starts Keta on the given node. Options:
