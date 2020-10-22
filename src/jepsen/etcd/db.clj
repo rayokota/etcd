@@ -125,6 +125,15 @@
           (let [url (str "https://downloads.apache.org/kafka/2.6.0/" kafka-version ".tgz")]
             ;(cu/install-archive! url "/opt")
             (c/exec :rm :-rf (c/lit "/tmp/*"))
+            (c/cd "/opt"
+                  (when-not (cu/exists? kafka-version)
+                    (c/exec :wget url :-P "/tmp")
+                    (c/exec :tar :-xf (str "/tmp/" kafka-version ".tgz") :-C "/opt")))
+
+            (c/cd "/opt"
+                  (when-not (cu/exists? maven-version)
+                    (c/exec :wget (str "https://mirrors.sonic.net/apache/maven/maven-3/3.6.3/binaries/" maven-version "-bin.tar.gz") :-P "/tmp")
+                    (c/exec :tar :-xf (str "/tmp/" maven-version "-bin.tar.gz") :-C "/opt")))
             (c/exec :mkdir "/tmp/zookeeper")
             (c/exec :echo (zk-node-id test node) :> "/tmp/zookeeper/myid")
             (c/exec :echo (str (slurp (io/resource "zookeeper.properties"))
@@ -143,15 +152,6 @@
                         slurp
                         (str/replace "$NODE_NAME" (name node)))
                     :> (str kafka-dir "/config/server.properties"))
-            (c/cd "/opt"
-                  (when-not (cu/exists? kafka-version)
-                    (c/exec :wget url :-P "/tmp")
-                    (c/exec :tar :-xf (str "/tmp/" kafka-version ".tgz") :-C "/opt")))
-
-            (c/cd "/opt"
-                  (when-not (cu/exists? maven-version)
-                    (c/exec :wget (str "https://mirrors.sonic.net/apache/maven/maven-3/3.6.3/binaries/" maven-version "-bin.tar.gz") :-P "/tmp")
-                    (c/exec :tar :-xf (str "/tmp/" maven-version "-bin.tar.gz") :-C "/opt")))
             (c/cd "/opt"
                   (when-not (cu/exists? "keta")
                     (c/exec :apt-get :install :-y "git")
