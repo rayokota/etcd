@@ -57,7 +57,7 @@
        :chdir   kafka-dir}
       (str kafka-dir "/bin/kafka-server-start.sh")
       (str kafka-dir "/config/server.properties"))
-    (Thread/sleep 5000)))
+    (Thread/sleep 10000)))
 
 (defn install-open-jdk8!
   "Installs open jdk8"
