@@ -60,16 +60,16 @@
     (Thread/sleep 10000)
     (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_commits"
             :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
-            :--bootstrap-server "localhost:9092")
+            :if-not-exists :--zookeeper "localhost:2181")
     (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_timestamps"
             :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
-            :--bootstrap-server "localhost:9092")
+            :if-not-exists :--zookeeper "localhost:2181")
     (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_leases"
             :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
-            :--bootstrap-server "localhost:9092")
+            :if-not-exists :--zookeeper "localhost:2181")
     (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_kv"
             :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
-            :--bootstrap-server "localhost:9092")
+            :if-not-exists :--zookeeper "localhost:2181")
     ))
 
 (defn install-open-jdk8!
@@ -132,7 +132,6 @@
     db/DB
     (setup! [db test node]
       (let [version (:version test)]
-        (c/exec :rm :-rf (c/lit "/tmp/*"))
         (install-open-jdk8!)
         (info node "installing Keta")
         (c/su
