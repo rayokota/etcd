@@ -233,7 +233,7 @@
          (catch StatusRuntimeException e#
            (throw+
              (let [status# (.getStatus e#)
-                   desc#   (.getDescription status#)]
+                   desc#   (str (.getDescription status#))]
                ; lmao, can't use a case statement here for ~reasons~
                (condp = (.getCode status#)
                  Status$Code/UNAVAILABLE
@@ -243,13 +243,13 @@
                  {:definite? true, :type :not-found, :description desc#}
 
                  Status$Code/INVALID_ARGUMENT
-                 (condp re-find (str desc#)
+                 (condp re-find desc#
                    #"duplicate key"
                    {:definite? true, :type :duplicate-key, :description desc#}
                    e#)
 
                  Status$Code/UNKNOWN
-                 (condp re-find (str desc#)
+                 (condp re-find desc#
                    #"leader changed"
                    {:definite? false, :type :leader-changed}
 
@@ -262,7 +262,7 @@
                  ; Fall back to regular expressions on status messages
                  (do (info "Unknown error status code" (.getCode status#)
                            "-" status# "-" e#)
-                     (condp re-find (str desc#)
+                     (condp re-find desc#
                        e#))))))
 
          (catch EtcdException e#
