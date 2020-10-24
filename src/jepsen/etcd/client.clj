@@ -243,13 +243,13 @@
                  {:definite? true, :type :not-found, :description desc#}
 
                  Status$Code/INVALID_ARGUMENT
-                 (condp (and (some? desc#) (re-find desc#))
+                 (condp re-find (str desc#)
                    #"duplicate key"
                    {:definite? true, :type :duplicate-key, :description desc#}
                    e#)
 
                  Status$Code/UNKNOWN
-                 (condp (and (some? desc#) (re-find desc#))
+                 (condp re-find (str desc#)
                    #"leader changed"
                    {:definite? false, :type :leader-changed}
 
@@ -262,7 +262,7 @@
                  ; Fall back to regular expressions on status messages
                  (do (info "Unknown error status code" (.getCode status#)
                            "-" status# "-" e#)
-                     (condp (and (some? desc#) (re-find desc#))
+                     (condp re-find (str desc#)
                        e#))))))
 
          (catch EtcdException e#
