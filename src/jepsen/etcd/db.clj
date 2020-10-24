@@ -132,6 +132,7 @@
     db/DB
     (setup! [db test node]
       (let [version (:version test)]
+        (c/exec :rm :-rf (c/lit "/tmp/*"))
         (install-open-jdk8!)
         (info node "installing Keta")
         (c/su
