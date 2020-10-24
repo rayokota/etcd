@@ -58,16 +58,16 @@
       (str kafka-dir "/bin/kafka-server-start.sh")
       (str kafka-dir "/config/server.properties"))
     (Thread/sleep 10000)
-    (c/exec "bin/kafka-topics.sh" :--create :--topic "_keta_commits"
+    (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_commits"
             :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
             :--bootstrap-server "localhost:9092")
-    (c/exec "bin/kafka-topics.sh" :--create :--topic "_keta_timestamps"
+    (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_timestamps"
             :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
             :--bootstrap-server "localhost:9092")
-    (c/exec "bin/kafka-topics.sh" :--create :--topic "_keta_leases"
+    (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_leases"
             :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
             :--bootstrap-server "localhost:9092")
-    (c/exec "bin/kafka-topics.sh" :--create :--topic "_keta_kv"
+    (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_kv"
             :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
             :--bootstrap-server "localhost:9092")
     ))
