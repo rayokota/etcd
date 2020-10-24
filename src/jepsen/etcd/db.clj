@@ -105,7 +105,7 @@
     (kill! [_ test node]
       (c/su
         (cu/stop-daemon! pidfile)
-        (Thread/sleep 7500)))
+        (Thread/sleep 10000)))
 
     db/Pause
     (pause!  [_ test node])
