@@ -122,7 +122,7 @@
 
     (kill! [_ test node]
       (c/su
-        (cu/stop-daemon! pidfile)
+        (cu/stop-daemon! "KetaMain" pidfile)
         (Thread/sleep 2000)))
 
     db/Pause
