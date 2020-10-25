@@ -58,6 +58,7 @@
        :chdir   kafka-dir}
       (str kafka-dir "/bin/kafka-server-start.sh")
       (str kafka-dir "/config/server.properties"))
+    (Thread/sleep 5000)
     (jepsen/synchronize test)
     (try (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_commits"
                  :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
@@ -189,7 +190,6 @@
 
       ; Once everyone's done their initial startup, we set initialized? to
       ; true, so future runs use --initial-cluster-state existing.
-      (Thread/sleep 5000)
       (jepsen/synchronize test)
       (reset! (:initialized? test) true))
 
