@@ -26,6 +26,31 @@
 (def zk-logfile "/tmp/zk.log")
 (def zk-pidfile "/tmp/zk.pid")
 
+(defn from-highest-term
+  "Takes a test and a function (f node client). Evaluates that function with a
+  client bound to each node in parallel, and returns the response with the
+  highest term."
+  [test f]
+  (let [rs (->> (:nodes test)
+                (real-pmap (fn [node]
+                             (try+
+                               (client/remap-errors
+                                 (client/with-client [c node] (f node c)))
+                               (catch client/client-error? e nil))))
+                (remove nil?))]
+    (if (seq rs)
+      (last (sort-by (comp :raft-term :header) rs))
+      (throw+ {:type :no-node-responded}))))
+
+(defn primary
+  "Picks the highest primary by term"
+  [test]
+  (from-highest-term test
+                     (fn [node c]
+                       (->> (client/member-status c node)
+                            :leader
+                            (client/member-id->node c)))))
+
 (defn start!
   "Starts Keta on the given node. Options:
 
@@ -133,7 +158,16 @@
     (setup-primary! [_ test node])
 
     (primaries [_ test]
-      ["n1"])
+      (try+
+        (list (primary test))
+        (catch [:type :no-node-responded] e
+          [])
+        (catch [:type :jepsen.etcd.client/no-such-node] e
+          (warn e "Weird cluster state: unknown node ID, can't figure out what primary is right now")
+          [])))
+
+    ;(primaries [_ test]
+    ;  ["n1"])
 
     db/DB
     (setup! [db test node]
