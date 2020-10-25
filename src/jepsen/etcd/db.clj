@@ -42,7 +42,7 @@
 
 (defn start-kafka!
   "Starts Kafka on the given node"
-  [node]
+  [test node]
   (c/su
     (cu/start-daemon!
       {:logfile zk-logfile
@@ -50,14 +50,16 @@
        :chdir   kafka-dir}
       (str kafka-dir "/bin/zookeeper-server-start.sh")
       (str kafka-dir "/config/zookeeper.properties"))
-    (Thread/sleep 5000)
+    (jepsen/synchronize test)
+    ;(Thread/sleep 5000)
     (cu/start-daemon!
       {:logfile kafka-logfile
        :pidfile kafka-pidfile
        :chdir   kafka-dir}
       (str kafka-dir "/bin/kafka-server-start.sh")
       (str kafka-dir "/config/server.properties"))
-    (Thread/sleep 10000)
+    (jepsen/synchronize test)
+    ;(Thread/sleep 10000)
     (try (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_commits"
                  :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
                  :--if-not-exists :--zookeeper "localhost:2181")
@@ -70,6 +72,7 @@
          (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_kv"
                  :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
                  :--if-not-exists :--zookeeper "localhost:2181")
+         (info node "successfully created topics")
          (catch RuntimeException e
            (info node "could not create topics")))
     ))
@@ -176,7 +179,7 @@
                   (c/exec :git :pull)
                   (c/exec "/opt/apache-maven-3.6.3/bin/mvn" :package :-DskipTests))
             )))
-      (start-kafka! node)
+      (start-kafka! test node)
       (db/start! db test node)
 
       ; Wait for node to come up
