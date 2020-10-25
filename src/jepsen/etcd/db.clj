@@ -132,7 +132,8 @@
     db/Primary
     (setup-primary! [_ test node])
 
-    (primaries [_ test])
+    (primaries [_ test]
+      ["n1"])
 
     db/DB
     (setup! [db test node]
