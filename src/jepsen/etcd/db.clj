@@ -161,10 +161,10 @@
       (try+
         (list (primary test))
         (catch [:type :no-node-responded] e
-          [])
+          ["n1"])
         (catch [:type :jepsen.etcd.client/no-such-node] e
           (warn e "Weird cluster state: unknown node ID, can't figure out what primary is right now")
-          [])))
+          ["n1"])))
 
     ;(primaries [_ test]
     ;  ["n1"])
