@@ -51,7 +51,6 @@
       (str kafka-dir "/bin/zookeeper-server-start.sh")
       (str kafka-dir "/config/zookeeper.properties"))
     (jepsen/synchronize test)
-    ;(Thread/sleep 5000)
     (cu/start-daemon!
       {:logfile kafka-logfile
        :pidfile kafka-pidfile
@@ -59,7 +58,6 @@
       (str kafka-dir "/bin/kafka-server-start.sh")
       (str kafka-dir "/config/server.properties"))
     (jepsen/synchronize test)
-    ;(Thread/sleep 10000)
     (try (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_commits"
                  :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
                  :--if-not-exists :--zookeeper "localhost:2181")
