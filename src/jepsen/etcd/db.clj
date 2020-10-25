@@ -50,6 +50,7 @@
        :chdir   kafka-dir}
       (str kafka-dir "/bin/zookeeper-server-start.sh")
       (str kafka-dir "/config/zookeeper.properties"))
+    (Thread/sleep 5000)
     (jepsen/synchronize test)
     (cu/start-daemon!
       {:logfile kafka-logfile
@@ -188,6 +189,7 @@
 
       ; Once everyone's done their initial startup, we set initialized? to
       ; true, so future runs use --initial-cluster-state existing.
+      (Thread/sleep 5000)
       (jepsen/synchronize test)
       (reset! (:initialized? test) true))
 
