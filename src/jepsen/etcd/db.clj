@@ -42,7 +42,7 @@
 
 (defn start-kafka!
   "Starts Kafka on the given node"
-  []
+  [node]
   (c/su
     (cu/start-daemon!
       {:logfile zk-logfile
@@ -176,7 +176,7 @@
                   (c/exec :git :pull)
                   (c/exec "/opt/apache-maven-3.6.3/bin/mvn" :package :-DskipTests))
             )))
-      (start-kafka!)
+      (start-kafka! node)
       (db/start! db test node)
 
       ; Wait for node to come up
