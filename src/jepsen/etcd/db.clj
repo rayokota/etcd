@@ -75,6 +75,8 @@
          (info node "successfully created topics")
          (catch RuntimeException e
            (info node "could not create topics")))
+    (Thread/sleep 5000)
+    (jepsen/synchronize test)
     ))
 
 (defn install-open-jdk8!
