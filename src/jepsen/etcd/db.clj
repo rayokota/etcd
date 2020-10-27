@@ -33,12 +33,13 @@
     :nodes                    A set of nodes that will comprise the cluster."
   [node opts]
   (c/su
-    (cu/start-daemon!
-      {:logfile logfile
-       :pidfile pidfile
-       :chdir   dir}
-      (str dir "/bin/keta-start")
-      (str dir "/config/keta.properties"))))
+    (when (not (cu/daemon-running? pidfile))
+      (cu/start-daemon!
+        {:logfile logfile
+         :pidfile pidfile
+         :chdir   dir}
+        (str dir "/bin/keta-start")
+        (str dir "/config/keta.properties")))))
 
 (defn start-kafka!
   "Starts Kafka on the given node"
