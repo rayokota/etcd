@@ -33,7 +33,7 @@
     :nodes                    A set of nodes that will comprise the cluster."
   [node opts]
   (c/su
-    (when (not (cu/daemon-running? pidfile))
+      (when (not (cu/exists? pidfile))
       (cu/start-daemon!
         {:logfile logfile
          :pidfile pidfile
