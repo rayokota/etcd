@@ -76,7 +76,7 @@
          (info node "successfully created topics")
          (catch RuntimeException e
            (info node "could not create topics")))
-    (Thread/sleep 5000)
+    (Thread/sleep 10000)
     (jepsen/synchronize test)
     ))
 
