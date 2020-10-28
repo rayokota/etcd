@@ -61,21 +61,22 @@
       (str kafka-dir "/config/server.properties"))
     (Thread/sleep 5000)
     (jepsen/synchronize test)
-    (try (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_commits"
-                 :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
-                 :--if-not-exists :--zookeeper "localhost:2181")
-         (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_timestamps"
-                 :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
-                 :--if-not-exists :--zookeeper "localhost:2181")
-         (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_leases"
-                 :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
-                 :--if-not-exists :--zookeeper "localhost:2181")
-         (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_kv"
-                 :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
-                 :--if-not-exists :--zookeeper "localhost:2181")
-         (info node "successfully created topics")
-         (catch RuntimeException e
-           (info node "could not create topics")))
+    (if (= node "n1")
+      (try (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_commits"
+                   :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
+                   :--bootstrap-server "localhost:9092")
+           (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_timestamps"
+                   :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
+                   :--bootstrap-server "localhost:9092")
+           (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_leases"
+                   :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
+                   :--bootstrap-server "localhost:9092")
+           (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_kv"
+                   :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
+                   :--bootstrap-server "localhost:9092")
+           (info node "successfully created topics")
+           (catch RuntimeException e
+             (info node "could not create topics"))))
     (Thread/sleep 10000)
     (jepsen/synchronize test)
     ))
