@@ -33,7 +33,7 @@
     :nodes                    A set of nodes that will comprise the cluster."
   [node opts]
   (c/su
-    (when (not (cu/daemon-running? pidfile))
+    (when-not (cu/daemon-running? pidfile)
       (cu/start-daemon!
         {:logfile logfile
          :pidfile pidfile
@@ -61,7 +61,7 @@
       (str kafka-dir "/config/server.properties"))
     (Thread/sleep 5000)
     (jepsen/synchronize test)
-    (if (= node "n1")
+    (when (= node "n1")
       (try (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_commits"
                    :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
                    :--bootstrap-server "localhost:9092")
