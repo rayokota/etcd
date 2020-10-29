@@ -84,10 +84,11 @@
                         {:db        db
                          :nodes     (:nodes opts)
                          :faults    (:nemesis opts)
-                         :partition {:targets [:primaries :majority :majorities-ring]}
+                         :partition {:targets [:primaries :majority]}
+                         ;:partition {:targets [:primaries :majority :majorities-ring]}
                          :pause     {:targets [:primaries :all]}
                          :kill      {:targets [:primaries :all]}
-                         :interval  10})]
+                         :interval  20})]
                          ;:interval  5})]
     (merge tests/noop-test
            opts
