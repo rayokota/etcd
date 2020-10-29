@@ -88,7 +88,7 @@
                          ;:partition {:targets [:primaries :majority :majorities-ring]}
                          :pause     {:targets [:primaries :all]}
                          :kill      {:targets [:primaries :all]}
-                         :interval  20})]
+                         :interval  30})]
                          ;:interval  5})]
     (merge tests/noop-test
            opts
