@@ -60,7 +60,8 @@
 
 (def timeout
   "A default timeout, in ms."
-  5000)
+  10000)
+  ;5000)
 
 ; Serialization
 
