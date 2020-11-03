@@ -41,6 +41,14 @@
         (str dir "/bin/keta-start")
         (str dir "/config/keta.properties")))))
 
+(defn create-topic!
+  "Creates a topic"
+  [topic]
+  (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic topic
+          :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
+          :--bootstrap-server "localhost:9092")
+  )
+
 (defn start-kafka!
   "Starts Kafka on the given node"
   [test node]
@@ -62,18 +70,13 @@
     (Thread/sleep 5000)
     (jepsen/synchronize test)
     (when (= node "n1")
-      (try (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_commits"
-                   :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
-                   :--bootstrap-server "localhost:9092")
-           (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_timestamps"
-                   :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
-                   :--bootstrap-server "localhost:9092")
-           (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_leases"
-                   :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
-                   :--bootstrap-server "localhost:9092")
-           (c/exec (str kafka-dir "/bin/kafka-topics.sh") :--create :--topic "_keta_kv"
-                   :--replication-factor 5 :--partitions 1 :--config :cleanup.policy=compact
-                   :--bootstrap-server "localhost:9092")
+      (try (create-topic! "_keta_commits")
+           (create-topic! "_keta_timestamps")
+           (create-topic! "_keta_leases")
+           (create-topic! "_keta_auth")
+           (create-topic! "_keta_auth_users")
+           (create-topic! "_keta_auth_roles")
+           (create-topic! "_keta_kv")
            (info node "successfully created topics")
            (catch RuntimeException e
              (info node "could not create topics"))))
