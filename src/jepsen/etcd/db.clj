@@ -173,16 +173,17 @@
                   (when-not (cu/exists? "keta")
                     (c/exec :apt-get :install :-y "git")
                     (c/exec :git :clone "https://github.com/rayokota/keta.git")))
+            (info node "building Keta")
+            (c/cd dir
+                  (c/exec :git :checkout :.)
+                  (c/exec :git :pull)
+                  (c/exec "/opt/apache-maven-3.6.3/bin/mvn" :package :-DskipTests))
             (c/exec :echo
                     (-> "keta.properties"
                         io/resource
                         slurp
                         (str/replace "$NODE_NAME" (name node)))
                     :> (str dir "/config/keta.properties"))
-            (info node "building Keta")
-            (c/cd dir
-                  (c/exec :git :pull)
-                  (c/exec "/opt/apache-maven-3.6.3/bin/mvn" :package :-DskipTests))
             )))
       (start-kafka! test node)
       (db/start! db test node)
